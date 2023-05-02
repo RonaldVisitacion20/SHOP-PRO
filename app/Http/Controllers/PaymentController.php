@@ -33,9 +33,7 @@ class PaymentController extends Controller
 
     public function cancelled()
     {
-        return redirect()->route('home')->withErrors(['cancel' => 'You cancelled the payment']);
+        return redirect()->route('home')->withErrors(['cancel' => 'Su pago ha sido cancelado']);
 
-        // return redirect()->route('home')
-        //     ->withErrors('You cancelled the payment');
     }
 }
