@@ -1,6 +1,7 @@
 <?php 
-namespace App\Resolvees;
-use App\PymentPlatform;
+namespace App\Resolvers;
+use App\Models\PaymentPlatform;
+use Exception;
 class PaymentPlatformResolver
 {
     protected $paymentPlatforms;
@@ -10,7 +11,8 @@ class PaymentPlatformResolver
     }
 
     public function resolveServices($paymentPlatformId){
-        $name   =   strtolower(($this->paymentPlatforms->firstwhere('id',$paymentPlatformId)));
+        $paymentPlatform = $this->paymentPlatforms->firstwhere('id', $paymentPlatformId);
+        $name = strtolower($paymentPlatform->name);
 
         $service    =   config("services.{$name}.class");
 

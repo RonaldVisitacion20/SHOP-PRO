@@ -1,12 +1,20 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Http\Request;
 
 use App\Services\PayPalServices;
-use Illuminate\Http\Request;
+use App\Resolvers\PaymentPlatformResolver;
 
 class PaymentController extends Controller
 {
+    Protected $paymentPlatformResolver;
+    public function __construct(PaymentPlatformResolver $paymentPlatformResolver)
+    {
+        $this->middleware('auth');
+        
+        $this->paymentPlatformResolver  =   $paymentPlatformResolver;
+    }
     public function pay(Request $request)
     {
         // dd($request->payment_platform);
@@ -18,7 +26,13 @@ class PaymentController extends Controller
         // dd($request->validate($rules));
 
         $request->validate($rules); // esta peticion se esta inyectando enla variable $request
-        $paymentPlatform = resolve(PayPalServices::class);
+        $paymentPlatform    = $this->paymentPlatformResolver
+                            ->resolveServices($request->payment_platform);
+
+        session()->put('paymentPlatformId',$request->payment_platform);
+
+        // $paymentPlatform = resolve(PayPalServices::class); // esta linera se hizo solo si se usaba paypal pero se hizo mas dinamico
+
         return $paymentPlatform->handlePayment($request);
 
         // return $request->all();
@@ -26,8 +40,15 @@ class PaymentController extends Controller
 
     public function approval()
     {
-        $paymentPlatform = resolve(PayPalServices::class);
-        return $paymentPlatform->handleApproval();
+        if(session()->has('paymentPlatformId')){
+            $paymentPlatform    = $this->paymentPlatformResolver
+                            ->resolveServices(\session()->get('paymentPlatformId'));
+            return $paymentPlatform->handleApproval();
+        }
+
+        return redirect()->route('home')->withErrors(['cancel' => 'Su metodo de pago no ha sido encontrado en la plataforma, intente otra vez']);
+        // $paymentPlatform = resolve(PayPalServices::class);
+        // return $paymentPlatform->handleApproval();
 
     }
 
